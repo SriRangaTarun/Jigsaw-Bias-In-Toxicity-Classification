@@ -1,3 +1,2 @@
 # Jigsaw-Bias-in-Toxicity-Classification
-My work on the [Jigsaw Unintended Bias in Toxicity Classification Competition](https://www.kaggle.com/c/jigsaw-unintended-bias-in-toxicity-classification) on Kaggle. I create an ML pipeline to detect
-toxicity (binary classification) in comments online.
+In this project, I created a deep learning model that can predict whether a given comment online (on a social media platform) is toxic or not. Toxic comments are comments which are derogatory, insulting, threatening. This project uses deep NLP (natural language processing) to solve the problem of hate and toxicity spreading online. It achieves an accuracy of approximately 95% in classifying comments as toxic or not.
