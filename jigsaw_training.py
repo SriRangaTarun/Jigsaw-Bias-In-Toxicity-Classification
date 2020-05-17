@@ -45,9 +45,9 @@ def get_model():
     outp = Dense(1, activation='sigmoid')(concatenate([max_pool_lstm, attention_lstm, capsule], axis=1))
     
     model = Model(inp, outp)
-    model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.005, decay=0.001), metrics=['acc'])
-    
-    return model
+    loss = 'binary_crossentropy'
+    optimizer = Adam(lr=0.005, decay=0.001)
+    model.compile(loss=loss, optimizer=optimizer, metrics=['acc']); return model
 
 model = get_model()
 split = np.int32(0.8*len(X_train))
