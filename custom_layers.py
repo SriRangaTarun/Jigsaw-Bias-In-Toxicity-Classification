@@ -1,15 +1,15 @@
 # https://github.com/bfelbo/DeepMoji/blob/master/deepmoji/attlayer.py
 class AttentionWeightedAverage(Layer):
     def __init__(self, return_attention=False, **kwargs):
-        self.init = initializers.get('uniform')
         self.supports_masking = True
+        self.init = initializers.get('uniform')
         self.return_attention = return_attention
         super(AttentionWeightedAverage, self).__init__(** kwargs)
 
     def build(self, input_shape):
         self.input_spec = [InputSpec(ndim=3)]
-        assert len(input_shape) == 3
 
+        assert len(input_shape) == 3
         self.W = self.add_weight(shape=(input_shape[2], 1),
                                  name='{}_W'.format(self.name),
                                  initializer=self.init)
@@ -22,13 +22,13 @@ class AttentionWeightedAverage(Layer):
         ai = K.exp(logits - K.max(logits, axis=-1, keepdims=True))
 
         if mask is not None:
-            mask = K.cast(mask, K.floatx())
-            ai = ai * mask
-        att_weights = ai / (K.sum(ai, axis=1, keepdims=True) + K.epsilon())
-        weighted_input = x * K.expand_dims(att_weights)
-        result = K.sum(weighted_input, axis=1)
-        if self.return_attention:
-            return [result, att_weights]
+            ai = ai * K.cast(mask, K.floatx())
+        
+        ai_sum = K.sum(ai, axis=1, keepdims=True)
+        att_weights = ai / (ai_sum + K.epsilon())
+        result = K.sum(x * K.expand_dims(att_weights), axis=1)
+        if self.return_attention: return [result, att_weights]
+
         return result
 
     def get_output_shape_for(self, input_shape):
