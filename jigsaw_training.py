@@ -85,11 +85,6 @@ for fold in [0, 1, 2, 3, 4]:
               validation_data=(X_train[val_ind], y_train[val_ind]>0.5),
               callbacks = [es, ckpt])
 
-    model_json = model.to_json()
-    pt = "model_{}.json".format(fold)
-    with open(pt, "w") as json_file:
-        json_file.write(model_json)
-
 # Save word index
 
 word_index = tokenizer.word_index
