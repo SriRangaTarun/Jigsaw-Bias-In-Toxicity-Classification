@@ -31,8 +31,6 @@ tokenizer.fit_on_texts(list(train_df['comment_text']))
 X_train = tokenizer.texts_to_sequences(list(train_df['comment_text']))
 X_train = pad_sequences(X_train, maxlen=MAXLEN); del tokenizer; gc.collect()
 
-word_index = tokenizer.word_index
-
 def get_model():
     inp = Input(shape=(MAXLEN,))
     embed = Embedding(3303 + 1, EMBED_SIZE, input_length=MAXLEN, trainable=False)
@@ -68,6 +66,7 @@ model.fit(X_train[:split],
 model_json = model.to_json()
 with open("model.json", "w") as json_file:
     json_file.write(model_json)
-    
+
+word_index = tokenizer.word_index
 with open('word_index.json', 'w') as f:
     json.dump(word_index, f)
