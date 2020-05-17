@@ -8,7 +8,9 @@ from keras.regularizers import *
 
 # https://github.com/bfelbo/DeepMoji/blob/master/deepmoji/attlayer.py
 class AttentionWeightedAverage(Layer):
-    def __init__(self, return_attention=False, **kwargs):
+    def __init__(self,
+                 return_attention=False,
+                 **kwargs):
         self.supports_masking = True
         self.init = initializers.get('uniform')
         self.return_attention = return_attention
