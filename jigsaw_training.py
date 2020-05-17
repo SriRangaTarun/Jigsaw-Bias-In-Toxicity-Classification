@@ -41,10 +41,8 @@ def get_model():
     
     max_pool_lstm = GlobalMaxPooling1D()(bi_lstm)
     attention_lstm = AttentionWeightedAverage()(bi_lstm)
-    capsule = Capsule(num_capsule=5, dim_capsule=5, routings=4, activation=squash)(bi_lstm)
-    
-    x = [max_pool_lstm, attention_lstm, Flatten()(capsule)]
-    outp = Dense(1, activation='sigmoid')(concatenate(x, axis=1))
+    capsule = Flatten()(Capsule(num_capsule=5, dim_capsule=5, routings=4, activation=squash)(bi_lstm))
+    outp = Dense(1, activation='sigmoid')(concatenate([max_pool_lstm, attention_lstm, capsule], axis=1))
     
     model = Model(inp, outp)
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.005, decay=0.001), metrics=['acc'])
