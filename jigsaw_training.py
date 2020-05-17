@@ -1,3 +1,5 @@
+# Import necessary packages
+
 import gc
 import json
 import argparse
@@ -10,6 +12,8 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from custom_layers import AttentionWeightedAverage, Capsule, squash
+
+# Define hyperparameters and paths
 
 parser = argparse.ArgumentParser()
 parser.add_argument('embedding_path')
@@ -24,12 +28,27 @@ NUM_EPOCHS = 100
 EMBED_SIZE = 300
 BATCH_SIZE = 2048
 MAX_FEATURES = 100000
+
+# Load data and define tokenizer
+
 train_df = pd.read_csv(train_data_path)
 tokenizer = Tokenizer(num_words=MAX_FEATURES, lower=True)
+
+# Fit tokenizer to the comments
 
 tokenizer.fit_on_texts(list(train_df['comment_text']))
 X_train = tokenizer.texts_to_sequences(list(train_df['comment_text']))
 X_train = pad_sequences(X_train, maxlen=MAXLEN); del tokenizer; gc.collect()
+
+# Build model using custom Capsule and Attention layers
+# 1). Takes embedded sentences as input
+# 2). Passes the output through spatial dropout and a Bidirectional LSTM layer
+# 3). The LSTM output is passed through Max Pooling and Weighted Average Attention
+# 4). The same LSTM output also passed through a Capsule layer and a Flatten layer
+# 5). The outputs of Pooling, Attention and Capsule are then concatenated into a vector
+# 6). They are then passed through a dense layer with one neuron followed by a Sigmoid activation
+
+# We use binary crossentropy as the loss function and ADAM as the optimizer
 
 def get_model():
     inp = Input(shape=(MAXLEN,))
@@ -49,21 +68,29 @@ def get_model():
     optimizer = Adam(lr=0.005, decay=0.001)
     model.compile(loss=loss, optimizer=optimizer, metrics=['acc']); return model
 
-model = get_model()
-split = np.int32(0.8*len(X_train))
-ckpt = ModelCheckpoint(f'model.h5', save_best_only = True)
-es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=3)
+# Train model on five folds (with callbacks) and save model after each fold
 
-model.fit(X_train[:split],
-          y_train[:split]>0.5,
-          batch_size=BATCH_SIZE,
-          epochs=NUM_EPOCHS//2,
-          callbacks = [es, ckpt],
-          validation_data=(X_train[split:], y_train[split:]>0.5))
+for fold in [0, 1, 2, 3, 4]:
+    K.clear_session()
+    tr_ind, val_ind = splits[fold]
+     
+    model = get_model()
+    ckpt = ModelCheckpoint(f'gru_{fold}.hdf5', save_best_only = True)
+    es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=3)
 
-model_json = model.to_json()
-with open("model.json", "w") as json_file:
-    json_file.write(model_json)
+    model.fit(X_train[tr_ind],
+              y_train[tr_ind]>0.5,
+              batch_size=BATCH_SIZE,
+              epochs=NUM_EPOCHS,
+              validation_data=(X_train[val_ind], y_train[val_ind]>0.5),
+              callbacks = [es, ckpt])
+
+    model_json = model.to_json()
+    pt = "model_{}.json".format(fold)
+    with open(pt, "w") as json_file:
+        json_file.write(model_json)
+
+# Save word index
 
 word_index = tokenizer.word_index
 with open('word_index.json', 'w') as f:
